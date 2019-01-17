@@ -13,138 +13,116 @@
  * GNU General Public License for more details.
  */
 
-// this example will play a track and then
-// every five seconds play another track
-//
-// it expects the sd card to contain these three mp3 files
-// but doesn't care whats in them
-//
-// sd:/mp3/0001.mp3
-// sd:/mp3/0002.mp3
-// sd:/mp3/0003.mp3
+#include "rfid.h"
 
-#include <DFMiniMp3.h>
+RFIDModule rfidModule;
 
-// implement a notification class,
-// its member methods will get called
-class Mp3Notify
-{
-public:
-  static void OnError(uint16_t errorCode)
-  {
-    // see DfMp3_Error for code meaning
-    Serial.println();
-    Serial.print("Com Error ");
-    Serial.println(errorCode);
+byte lastSeenTagID[4];
+boolean lastTagPresentState = false;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Tiena RFID-based Audiobook Player");
+  rfidModule.init();
+  Serial.println("Boot complete.");
+}
+
+void loop() {
+  // let the rfid module loop
+  rfidModule.loop();
+
+  // get the rfid status
+  if (!rfidModule.tagPresent() && lastTagPresentState) {
+    Serial.println("RFID: Tag Removed");
+    lastTagPresentState = rfidModule.tagPresent();
   }
-
-  static void OnPlayFinished(uint16_t globalTrack)
-  {
-    Serial.println();
-    Serial.print("Play finished for #");
-    Serial.println(globalTrack);
+  if (rfidModule.tagPresent() && !lastTagPresentState) {
+    Serial.println("RFID: Tag Detected");
+    lastTagPresentState = rfidModule.tagPresent();
+    // read and output uuid
+    byte *tagUUID = rfidModule.getCurrentTagSerial();
+    // check if new tag is equal to the last tag
+    if (!memcmp(tagUUID, lastSeenTagID, 4)) {
+      // the IDs are equal
+      Serial.print("RFID: Prior Tag Detected: ");
+    } else {
+      Serial.print("RFID: New Tag Detected: ");
+    }
+    for (int i = 0; i < 4; i++) {
+      lastSeenTagID[i] = tagUUID[i];
+      Serial.print(tagUUID[i], HEX);
+    }
+    Serial.print("\n");
+    Serial.println(rfidModule.getCurrentTagData());
   }
-
-  static void OnCardOnline(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("Card online ");
-    Serial.println(code);
-  }
-
-  static void OnCardInserted(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("Card inserted ");
-    Serial.println(code);
-  }
-
-  static void OnCardRemoved(uint16_t code)
-  {
-    Serial.println();
-    Serial.print("Card removed ");
-    Serial.println(code);
-  }
-};
-
-// instance a DFMiniMp3 object,
-// defined with the above notification class and the hardware serial class
-//
-//DFMiniMp3 mp3 = null;
-
-// Some arduino boards only have one hardware serial port, so a software serial port is needed instead.
-// comment out the above definition and uncomment these lines
-//SoftwareSerial secondarySerial(10, 11); // RX, TX
-//DFMiniMp3<SoftwareSerial, Mp3Notify> mp3(secondarySerial);
+}
 
 /*
-Just few bullet points to sum up
+#include "mp3.h"
 
-Connect EN to 3.3v
-Connect GPIO0 to GND
-Connect GPIO15 to GND to flash
-Remember to connect the reference GND to the GND of esp8266
-5.Lastly correctly match the tx and rx lines
+MP3Player mp3Player;
 
-*/
-HardwareSerial mp3Serial(1);
-DFMiniMp3<HardwareSerial, Mp3Notify> mp3(mp3Serial);
-
-#define RXD2 2
-#define TXD2 15 // DO NOT USE FOR UART, PREVENTS FLASHING, NEEDS TO BE LOW TO FLASH
+int buttonAPin = 15;
+int buttonBPin = 2;
+int buttonCPin = 4;
+int buttonAState = 0;
+int buttonBState = 0;
+int buttonCState = 0;
 
 void setup()
 {
+  // init serial console
   Serial.begin(115200);
-  Serial.println("Initializing...");
 
-  // Note the format for setting a serial port is as follows: Serial2.begin(baud-rate, protocol, RX pin, TX pin);
-  mp3Serial.begin(9600, SERIAL_8N1, RXD2, TXD2);
-  Serial.println("Serial Txd is on pin: " + String(TXD2));
-  Serial.println("Serial Rxd is on pin: " + String(RXD2));
+  pinMode(buttonAPin, INPUT);
+  pinMode(buttonBPin, INPUT);
+  pinMode(buttonCPin, INPUT);
 
-  mp3.begin();
+  mp3Player.init();
+  mp3Player.printInfoToConsole();
 
-  uint16_t volume = mp3.getVolume();
-  Serial.print("volume ");
-  Serial.println(volume);
-  mp3.setVolume(24);
-
-  uint16_t count = mp3.getTotalTrackCount();
-  Serial.print("files ");
-  Serial.println(count);
-
-  Serial.println("starting...");
-}
-
-void waitMilliseconds(uint16_t msWait)
-{
-  uint32_t start = millis();
-
-  while ((millis() - start) < msWait)
-  {
-    // calling mp3.loop() periodically allows for notifications
-    // to be handled without interrupts
-    mp3.loop();
-    delay(1);
-  }
+  mp3Player.setVolume(30);
+  mp3Player.playTrack(1);
 }
 
 void loop()
 {
-  Serial.println("track 1");
-  //mp3.playFile(0);
-  mp3.playMp3FolderTrack(1); // sd:/mp3/0001.mp3
+  buttonAState = digitalRead(buttonAPin); // put your main code here, to run repeatedly:
+  if (buttonAState == 1)
+  {
+    Serial.println("BUTTON A ON");
+  }
+  if (buttonAState == 0)
+  {
+    Serial.println("BUTTON A OFF");
+  }
 
-  waitMilliseconds(5000);
-  Serial.println("track 2");
-  mp3.playMp3FolderTrack(2); // sd:/mp3/0002.mp3
+  buttonBState = digitalRead(buttonBPin); // put your main code here, to run repeatedly:
+  if (buttonBState == 1)
+  {
+    Serial.println("BUTTON B ON");
+  }
+  if (buttonBState == 0)
+  {
+    Serial.println("BUTTON B OFF");
+  }
 
-  waitMilliseconds(5000);
+  buttonCState = digitalRead(buttonCPin); // put your main code here, to run repeatedly:
+  if (buttonCState == 1)
+  {
+    Serial.println("BUTTON C ON");
+  }
+  if (buttonCState == 0)
+  {
+    Serial.println("BUTTON C OFF");
+  }
 
-  Serial.println("track 3");
-  mp3.playMp3FolderTrack(3); // sd:/mp3/0002.mp3
-
-  waitMilliseconds(5000);
-
+  static unsigned long timer = millis();
+  if (millis() - timer > 3000)
+  {
+    timer = millis();
+    mp3Player.next(); //Play next mp3 every 3 second.
+  }
+  mp3Player.printStateToConsole();
 }
+*/

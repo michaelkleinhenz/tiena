@@ -12,3 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
+#endif

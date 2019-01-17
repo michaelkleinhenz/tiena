@@ -12,3 +12,35 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "Arduino.h"
+#include "DFRobotDFPlayerMini.h"
+
+#ifndef MP3_H
+#define MP3_H
+
+class MP3Player
+{
+  public:
+    MP3Player();
+    void init();
+    void setVolume(uint8_t volume);
+    void volumeUp();
+    void volumeDown();
+    void playFolder(uint8_t folderNumber, boolean looped);
+    void stop();
+    void pause();
+    void play();
+    void playTrack(int track);
+    void next();
+    void previous();
+    uint8_t getState();
+    uint8_t getNumFolders();
+    uint8_t getCurrentFileNumber();
+    uint8_t getCurrentVolume();
+    void printStateToConsole();
+    void printInfoToConsole();
+  private:
+    DFRobotDFPlayerMini mp3PlayerInstance;
+};
+
+#endif
