@@ -21,7 +21,7 @@
 
 typedef struct RFIDPayload {
 	char* title;
-  uint8_t id;
+  char* id;
   uint8_t type;
 	uint8_t folder;
 	uint8_t track;
@@ -36,10 +36,7 @@ class RFIDModule
     boolean tagPresent();
     byte* getCurrentTagSerial();
     char* getCurrentTagData();
-    /*
-    RFIDPayload getPayload();
-    uint8_t writePayload(RFIDPayload payload);
-    */
+    //RFIDPayload getPayload();
   private:
     MFRC522* mfrc522;
     byte currentTagSerial[4];

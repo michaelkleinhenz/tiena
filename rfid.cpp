@@ -21,13 +21,11 @@
 #define RST_PIN 22
 #define SS_PIN 21
 
-RFIDModule::RFIDModule()
-{
+RFIDModule::RFIDModule() {
   // NOP
 }
 
-void RFIDModule::init()
-{
+void RFIDModule::init() {
   Serial.println(F("Initializing SPI Bus..."));
   SPI.begin();
   Serial.println("SPI Bus ready.");
@@ -129,3 +127,10 @@ byte* RFIDModule::getCurrentTagSerial() {
 char* RFIDModule::getCurrentTagData() {
   return this->currentTagData;
 }
+
+/*
+RFIDPayload RFIDModule::getPayload() {
+  // TODO: parse the this->currentTagData into RFIDPayload
+  return NULL;
+};
+*/

@@ -12,7 +12,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 
@@ -25,58 +24,48 @@
 // this is needed because the serial comm will get unstable
 // if commands are sent too fast.
 
-MP3Player::MP3Player()
-{
+MP3Player::MP3Player() {
   // NOP
 }
 
-void MP3Player::init()
-{
+void MP3Player::init() {
   Serial1.begin(9600, SERIAL_8N1, MP3_RX, MP3_TX);
   delay(1000); // wait for the serial init to settle
   Serial.println(F("Initializing MP3 Module..."));
-  if (!this->mp3PlayerInstance.begin(Serial1))
-  {
+  if (!this->mp3PlayerInstance.begin(Serial1)) {
     Serial.println(F("FATAL: Unable to initialize MP3 module!"));
-    while (true)
-      ;
+    while (true);
   }
   Serial.println(F("MP3 Module ready."));
   delay(1000);
 }
 
-void MP3Player::setVolume(uint8_t volume)
-{
+void MP3Player::setVolume(uint8_t volume) {
   this->mp3PlayerInstance.volume(volume);
   delay(1000);
   Serial.printf("MP3: Setting Volume to %d\n", this->mp3PlayerInstance.readVolume());
   delay(1000);
 }
 
-void MP3Player::volumeUp()
-{
+void MP3Player::volumeUp() {
   this->mp3PlayerInstance.volumeUp();
   delay(1000);
   Serial.printf("MP3: Setting Volume to %d\n", this->mp3PlayerInstance.readVolume());
   delay(1000);
 }
 
-void MP3Player::volumeDown()
-{
+void MP3Player::volumeDown() {
   this->mp3PlayerInstance.volumeDown();
   delay(1000);
   Serial.printf("MP3: Setting Volume to %d\n", this->mp3PlayerInstance.readVolume());
   delay(1000);
 }
 
-void MP3Player::playFolder(uint8_t folderNumber, boolean looped)
-{
-  if (looped)
-  {
+void MP3Player::playFolder(uint8_t folderNumber, boolean looped) {
+  if (looped) {
     this->mp3PlayerInstance.loopFolder(folderNumber);
   }
-  else
-  {
+  else {
     this->mp3PlayerInstance.playFolder(folderNumber, 1);
   }
   delay(1000);
@@ -84,75 +73,72 @@ void MP3Player::playFolder(uint8_t folderNumber, boolean looped)
   delay(1000);
 }
 
-void MP3Player::stop()
-{
+void MP3Player::stop() {
   this->mp3PlayerInstance.stop();
   Serial.printf("MP3: Stop\n");
   delay(1000);
 }
 
-void MP3Player::pause()
-{
+void MP3Player::pause() {
   this->mp3PlayerInstance.pause();
   Serial.printf("MP3: Pause\n");
   delay(1000);
 }
 
-void MP3Player::play()
-{
+void MP3Player::play() {
   this->mp3PlayerInstance.start();
   delay(1000);
   Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
   delay(1000);
 }
 
-void MP3Player::playTrack(int track)
-{
+void MP3Player::playTrack(int track) {
   this->mp3PlayerInstance.play(track);
   delay(1000);
   Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
   delay(1000);
 }
 
-void MP3Player::next()
-{
+void MP3Player::playFolderTrack(uint8_t folderNumber, uint8_t trackNumber) {
+  this->mp3PlayerInstance.playFolder(folderNumber, trackNumber);
+  delay(1000);
+  Serial.printf("MP3: Playing Track %d of folder %d\n", trackNumber, folderNumber);
+  delay(1000);
+}
+
+void MP3Player::next() {
   this->mp3PlayerInstance.next();
   delay(1000);
   Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
   delay(1000);
 }
 
-void MP3Player::previous()
-{
+void MP3Player::previous() {
   this->mp3PlayerInstance.previous();
   delay(1000);
   Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
   delay(1000);
 }
 
-uint8_t MP3Player::getNumFolders()
-{
+uint8_t MP3Player::getNumFolders() {
   uint8_t value = this->mp3PlayerInstance.readFileCounts();
   delay(1000);
   return value;
 }
 
-uint8_t MP3Player::getCurrentFileNumber()
-{
+uint8_t MP3Player::getCurrentFileNumber() {
   uint8_t value = this->mp3PlayerInstance.readCurrentFileNumber();
   delay(1000);
   return value;
 }
 
-uint8_t MP3Player::getState()
-{
+uint8_t MP3Player::getState() {
   uint8_t value = this->mp3PlayerInstance.readState();
   delay(1000);
   return value;
 }
 
-uint8_t MP3Player::getCurrentVolume()
-{
+uint8_t MP3Player::getCurrentVolume() {
   uint8_t value = this->mp3PlayerInstance.readVolume();
   delay(1000);
   return value;
@@ -168,8 +154,7 @@ void MP3Player::printInfoToConsole() {
   delay(1000);
 }
 
-void MP3Player::printStateToConsole()
-{
+void MP3Player::printStateToConsole() {
   if (this->mp3PlayerInstance.available())
   {
     uint8_t type = this->mp3PlayerInstance.readType();

@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/kleinhenz/Arduino/hardware/espressif/esp32/cores/esp32",
+                "/home/kleinhenz/Arduino/libraries/DFRobotDFPlayerMini"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "path": [
+                    "/home/kleinhenz/Arduino/hardware/espressif/esp32/cores/esp32",
+                    "/home/kleinhenz/Arduino/libraries/DFRobotDFPlayerMini"
+                ]
+            },
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

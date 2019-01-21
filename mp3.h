@@ -18,8 +18,7 @@
 #ifndef MP3_H
 #define MP3_H
 
-class MP3Player
-{
+class MP3Player {
   public:
     MP3Player();
     void init();
@@ -27,10 +26,11 @@ class MP3Player
     void volumeUp();
     void volumeDown();
     void playFolder(uint8_t folderNumber, boolean looped);
+    void playFolderTrack(uint8_t folderNumber, uint8_t trackNumber);
+    void playTrack(int track);
     void stop();
     void pause();
     void play();
-    void playTrack(int track);
     void next();
     void previous();
     uint8_t getState();

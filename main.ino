@@ -14,7 +14,17 @@
  */
 
 #include "rfid.h"
+#include "mp3.h"
 
+#define BUTTON_A_PIN 15
+#define BUTTON_B_PIN 2
+#define BUTTON_C_PIN 4
+
+int buttonAState = 0;
+int buttonBState = 0;
+int buttonCState = 0;
+
+MP3Player mp3Player;
 RFIDModule rfidModule;
 
 byte lastSeenTagID[4];
@@ -24,21 +34,66 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Tiena RFID-based Audiobook Player");
   rfidModule.init();
+  //mp3Player.init();
   Serial.println("Boot complete.");
+
+  pinMode(BUTTON_A_PIN, INPUT);
+  pinMode(BUTTON_B_PIN, INPUT);
+  pinMode(BUTTON_C_PIN, INPUT);
+
+  /*
+  mp3Player.setVolume(30);
+  mp3Player.playTrack(1);
+  */
+}
+
+void loopButtons() {
+  buttonAState = digitalRead(BUTTON_A_PIN);
+  if (buttonAState == 1) {
+    Serial.println("KEYS: Detected Key A Pressed");
+  }
+  if (buttonAState == 0) {
+  }
+  buttonBState = digitalRead(BUTTON_B_PIN);
+  if (buttonBState == 1) {
+    Serial.println("KEYS: Detected Key B Pressed");
+  }
+  if (buttonBState == 0) {
+  }
+  buttonCState = digitalRead(BUTTON_C_PIN);
+  if (buttonCState == 1) {
+    Serial.println("KEYS: Detected Key C Pressed");
+  }
+  if (buttonCState == 0) {
+  }
 }
 
 void loop() {
-  // let the rfid module loop
+  // rfid module loop
   rfidModule.loop();
 
-  // get the rfid status
-  if (!rfidModule.tagPresent() && lastTagPresentState) {
-    Serial.println("RFID: Tag Removed");
-    lastTagPresentState = rfidModule.tagPresent();
+  // button loop
+  loopButtons();
+
+  // handle mp3 events  
+  /*
+  static unsigned long timer = millis();
+  if (millis() - timer > 3000) {
+    timer = millis();
+    mp3Player.next(); //Play next mp3 every 3 second.
   }
-  if (rfidModule.tagPresent() && !lastTagPresentState) {
+  mp3Player.printStateToConsole();
+  */
+
+  // handle rfid events
+  boolean currentPresentState = rfidModule.tagPresent();
+  if (!currentPresentState && lastTagPresentState) {
+    Serial.println("RFID: Tag Removed");
+    lastTagPresentState = currentPresentState;
+  }
+  if (currentPresentState && !lastTagPresentState) {
     Serial.println("RFID: Tag Detected");
-    lastTagPresentState = rfidModule.tagPresent();
+    lastTagPresentState = currentPresentState;
     // read and output uuid
     byte *tagUUID = rfidModule.getCurrentTagSerial();
     // check if new tag is equal to the last tag
@@ -56,73 +111,3 @@ void loop() {
     Serial.println(rfidModule.getCurrentTagData());
   }
 }
-
-/*
-#include "mp3.h"
-
-MP3Player mp3Player;
-
-int buttonAPin = 15;
-int buttonBPin = 2;
-int buttonCPin = 4;
-int buttonAState = 0;
-int buttonBState = 0;
-int buttonCState = 0;
-
-void setup()
-{
-  // init serial console
-  Serial.begin(115200);
-
-  pinMode(buttonAPin, INPUT);
-  pinMode(buttonBPin, INPUT);
-  pinMode(buttonCPin, INPUT);
-
-  mp3Player.init();
-  mp3Player.printInfoToConsole();
-
-  mp3Player.setVolume(30);
-  mp3Player.playTrack(1);
-}
-
-void loop()
-{
-  buttonAState = digitalRead(buttonAPin); // put your main code here, to run repeatedly:
-  if (buttonAState == 1)
-  {
-    Serial.println("BUTTON A ON");
-  }
-  if (buttonAState == 0)
-  {
-    Serial.println("BUTTON A OFF");
-  }
-
-  buttonBState = digitalRead(buttonBPin); // put your main code here, to run repeatedly:
-  if (buttonBState == 1)
-  {
-    Serial.println("BUTTON B ON");
-  }
-  if (buttonBState == 0)
-  {
-    Serial.println("BUTTON B OFF");
-  }
-
-  buttonCState = digitalRead(buttonCPin); // put your main code here, to run repeatedly:
-  if (buttonCState == 1)
-  {
-    Serial.println("BUTTON C ON");
-  }
-  if (buttonCState == 0)
-  {
-    Serial.println("BUTTON C OFF");
-  }
-
-  static unsigned long timer = millis();
-  if (millis() - timer > 3000)
-  {
-    timer = millis();
-    mp3Player.next(); //Play next mp3 every 3 second.
-  }
-  mp3Player.printStateToConsole();
-}
-*/

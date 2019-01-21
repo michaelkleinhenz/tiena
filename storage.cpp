@@ -12,3 +12,30 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "Arduino.h"
+#include <Preferences.h>
+
+#include "storage.h"
+
+Storage::Storage() {
+  // NOP
+}
+
+uint8_t Storage::retrieveTrackForBook(char* bookId) {
+  this->preferences.begin("tiena", true);
+  uint8_t track = this->preferences.getUInt(bookId, 0);
+  this->preferences.end();
+  return track;
+}
+
+boolean Storage::storeTrackForBook(char* bookId, uint8_t track) {
+  this->preferences.begin("tiena", true);
+  this->preferences.putUInt(bookId, track);
+  this->preferences.end();
+  return true;
+}
+
+boolean Storage::clear() {
+  this->preferences.begin("tiena", true);
+  this->preferences.clear();
+}

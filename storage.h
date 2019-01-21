@@ -12,8 +12,20 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "Arduino.h"
+#include <Preferences.h>
 
-#ifndef KEYS_H
-#define KEYS_H
+#ifndef STORAGE_H
+#define STORAGE_H
+
+class Storage {
+  public:
+    Storage();
+    uint8_t retrieveTrackForBook(char* bookId);
+    boolean storeTrackForBook(char* bookId, uint8_t track);
+    boolean clear();
+  private:
+    Preferences preferences;
+};
 
 #endif
