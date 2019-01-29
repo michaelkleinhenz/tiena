@@ -6,7 +6,7 @@
 
 #include "WiFi.h"
 
-#include "AudioFileSourceSDMMC.h"
+#include "AudioFileSourceMMC.h"
 #include "AudioFileSourceID3.h"
 #include "AudioGeneratorMP3.h"
 

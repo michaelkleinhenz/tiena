@@ -4,6 +4,7 @@
   Extension to the ESP8266Audio Library 
 */
 
+#include "Arduino.h"
 #include "AudioFileSourceMMC.h"
 
 AudioFileSourceMMC::AudioFileSourceMMC() {
@@ -34,11 +35,10 @@ bool AudioFileSourceMMC::seek(int32_t pos, int dir) {
   if (dir==SEEK_SET) 
    return audiofile.seek(pos);
   else if (dir==SEEK_CUR) 
-   return audiofile.seek(f.position() + pos);
+   return audiofile.seek(audiofile.position() + pos);
   else if (dir==SEEK_END) 
-   return audiofile.seek(f.size() + pos);
-  else
-   return false;
+   return audiofile.seek(audiofile.size() + pos);
+  return false;
 }
 
 bool AudioFileSourceMMC::close() {

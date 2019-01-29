@@ -14,29 +14,29 @@
  */
 
 #include "Arduino.h"
+#include "SPI.h"
+#include "MFRC522.h"
 
-#ifndef NFCREADER_H
-#define NFCREADER_H
+#ifndef NFCMFRC522_H
+#define NFCMFRC522_H
 
-#define MIMETYPE "app/tiena"
-
-typedef struct NFCPayload {
-	char* title;
-  char* id;
-  uint8_t type;
-	uint8_t folder;
-	uint8_t track;
-} NFCPayload;
-
-class NFCReader {
+class NFCReaderMFRC522 {
   public:
-    NFCReader();
+    NFCReaderMFRC522();
     void init();
     void loop();
     boolean tagPresent();
     byte* getCurrentTagSerial();
     char* getCurrentTagData();
-    //NFCPayload getPayload();
+    NFCPayload* getPayload();
+  private:
+    MFRC522* mfrc522;
+    byte currentTagSerial[4];
+    char currentTagData[16*4];
+    bool nfc_tag_present_prev;
+    bool nfc_tag_present;
+    int _nfc_error_counter;
+    bool _tag_found;
 };
 
 #endif

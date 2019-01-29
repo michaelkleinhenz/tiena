@@ -14,30 +14,42 @@
  */
 
 #include "Arduino.h"
-#include "SPI.h"
-#include "MFRC522.h"
-#include "NFCReader.h"
 
-#ifndef NFCMFRC522_H
-#define NFCMFRC522_H
+#ifndef NFCREADER_H
+#define NFCREADER_H
 
-class NFCReaderMFRC522 : public NFCReader {
+#define MIMETYPE "app/tiena"
+
+/*
+ Serialized payload format is
+ 
+   <id>%<type>%<folder>%<track>%<title>%<url>
+ 
+ Example:
+
+   tenner01%01%42%01%Das erste Abenteuer%http://some.location/download/tenner01.zip
+
+*/
+
+/*
+typedef struct NFCPayload {
+	char* title;
+  char* id;
+  char* url;
+  uint8_t type;
+	uint8_t folder;
+	uint8_t track;
+} NFCPayload;
+
+class NFCReader {
   public:
-    RFIDModuleMFRC522();
+    NFCReader();
     void init();
     void loop();
     boolean tagPresent();
     byte* getCurrentTagSerial();
     char* getCurrentTagData();
-    //NFCPayload getPayload();
-  private:
-    MFRC522* mfrc522;
-    byte currentTagSerial[4];
-    char currentTagData[16*4];
-    bool nfc_tag_present_prev;
-    bool nfc_tag_present;
-    int _nfc_error_counter;
-    bool _tag_found;
+    NFCPayload getPayload();
 };
-
+*/
 #endif

@@ -13,149 +13,16 @@
  * GNU General Public License for more details.
  */
 
-#include "AudioFileSourceMMC.h"
-#include "AudioFileSourceID3.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
-
-AudioGeneratorMP3 *mp3;
-AudioFileSourceID3 *id3;
-AudioFileSourceMMC *file;
-AudioOutputI2S *out;
-
-// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
-void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
-{
-  (void)cbData;
-  Serial.printf("ID3 callback for: %s = '", type);
-
-  if (isUnicode) {
-    string += 2;
-  }
-  
-  while (*string) {
-    char a = *(string++);
-    if (isUnicode) {
-      string++;
-    }
-    Serial.printf("%c", a);
-  }
-  Serial.printf("'\n");
-  Serial.flush();
-}
-
-PN532_HSU *pn532hsu;
-NfcAdapter *nfc;
-
-void setup(void) {
-    Serial.begin(115200);
-    Serial.println("NDEF Reader");
-    Serial1.begin(115200, SERIAL_8N1, 14, 27);
-    pn532hsu = new PN532_HSU(Serial1);
-    nfc = new NfcAdapter(*pn532hsu);
-    nfc->begin();
-/*
-    if(!SD.begin(4)){
-        Serial.println("Card Mount Failed");
-        return;
-    }
-  Serial.printf("mp3 start\n");
-
-  file = new AudioFileSourceSD("/01/001.mp3");
-  id3 = new AudioFileSourceID3(file);
-  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-  out = new AudioOutputI2S();
-  mp3 = new AudioGeneratorMP3();
-  mp3->begin(id3, out);
-  */
-}
-
-void loop(void) {
-    Serial.println("\nScan a NFC tag\n");
-    if (nfc->tagPresent())
-    {
-        NfcTag tag = nfc->read();
-        tag.print();
-    }
-    /*
-    if (mp3->isRunning()) {
-      if (!mp3->loop()) mp3->stop();
-    } else {
-      Serial.printf("mp3 done\n");
-    }
-    */
-    delay(5000);
-}
-
-/*
-#include <Arduino.h>
+#include <pthread.h>
 #include <WiFi.h>
-#include "SD.h"
 
-#include "AudioFileSourceSD.h"
-#include "AudioFileSourceID3.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
+#include "Display.h"
+#include "MP3Player.h"
+#include "NFCReader.h"
 
-AudioGeneratorMP3 *mp3;
-AudioFileSourceID3 *id3;
-AudioFileSourceSD *file;
-AudioOutputI2S *out;
-
-// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
-void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
-{
-  (void)cbData;
-  Serial.printf("ID3 callback for: %s = '", type);
-
-  if (isUnicode) {
-    string += 2;
-  }
-  
-  while (*string) {
-    char a = *(string++);
-    if (isUnicode) {
-      string++;
-    }
-    Serial.printf("%c", a);
-  }
-  Serial.printf("'\n");
-  Serial.flush();
-}
-
-void setup()
-{
-  WiFi.mode(WIFI_OFF); 
-  Serial.begin(115200);
-  delay(1000);
-  if(!SD.begin(4)){
-        Serial.println("Card Mount Failed");
-        return;
-    }
-  Serial.printf("mp3 start\n");
-
-  file = new AudioFileSourceSD("/01/001.mp3");
-  id3 = new AudioFileSourceID3(file);
-  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-  out = new AudioOutputI2S();
-  mp3 = new AudioGeneratorMP3();
-  mp3->begin(id3, out);
-}
-
-void loop()
-{
-  if (mp3->isRunning()) {
-    if (!mp3->loop()) mp3->stop();
-  } else {
-    Serial.printf("mp3 done\n");
-    delay(1000);
-  }
-}
-*/
-
-/*
-#include "rfid.h"
-#include "mp3.h"
+#include "DisplaySSD1306.h"
+#include "MP3PlayerI2S.h"
+#include "NFCReaderPN532.h"
 
 #define BUTTON_A_PIN 15
 #define BUTTON_B_PIN 2
@@ -165,22 +32,57 @@ int buttonAState = 0;
 int buttonBState = 0;
 int buttonCState = 0;
 
-MP3Player mp3Player;
-RFIDModule rfidModule;
+MP3PlayerI2S *mp3Player;
+NFCReaderPN532 *nfcReader;
 
 byte lastSeenTagID[4];
 boolean lastTagPresentState = false;
 
+void *startLoopSound(void *mp3PlayerImpl) {
+  // when this terminates, the thread ends.
+  // this should run forever.
+  while (true) {
+    ((MP3PlayerI2S*)mp3PlayerImpl)->loop();
+  }
+}
+
+void *startLoopNFC(void *nfcReaderImpl) {
+  // when this terminates, the thread ends.
+  // this should run forever.
+  while (true) {
+    ((NFCReaderPN532*)nfcReaderImpl)->loop();
+  }
+}
+
+void startThreads() {
+  pthread_t threads[2];
+  int returnValue;
+  returnValue = pthread_create(&threads[0], NULL, startLoopSound, (void*)mp3Player);
+  if (returnValue) {
+    Serial.println("SYS: An error has occurred on starting sound loop");
+  }
+  returnValue = pthread_create(&threads[1], NULL, startLoopNFC, (void*)nfcReader);
+  if (returnValue) {
+    Serial.println("SYS: An error has occurred on starting NFC loop");
+  }
+}
+
 void setup() {
+  WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   Serial.println("Tiena RFID-based Audiobook Player");
-  rfidModule.init();
-  //mp3Player.init();
+  mp3Player = new MP3PlayerI2S();
+  nfcReader = new NFCReaderPN532();
+  mp3Player->init();
+  nfcReader->init();
+  //pinMode(BUTTON_A_PIN, INPUT);
+  //pinMode(BUTTON_B_PIN, INPUT);
+  //pinMode(BUTTON_C_PIN, INPUT);
+  startThreads();
   Serial.println("Boot complete.");
 
-  pinMode(BUTTON_A_PIN, INPUT);
-  pinMode(BUTTON_B_PIN, INPUT);
-  pinMode(BUTTON_C_PIN, INPUT);
+  // DEMO
+  mp3Player->play();
 }
 
 void loopButtons() {
@@ -205,36 +107,32 @@ void loopButtons() {
 }
 
 void loop() {
-  // rfid module loop
-  rfidModule.loop();
-
   // button loop
-  loopButtons();
+  //loopButtons();
 
-  // handle rfid events
-  boolean currentPresentState = rfidModule.tagPresent();
+  // handle nfc events
+  boolean currentPresentState = nfcReader->tagPresent();
   if (!currentPresentState && lastTagPresentState) {
-    Serial.println("RFID: Tag Removed");
+    Serial.println("NFC: Tag Removed");
     lastTagPresentState = currentPresentState;
   }
   if (currentPresentState && !lastTagPresentState) {
-    Serial.println("RFID: Tag Detected");
+    Serial.println("NFC: Tag Detected");
     lastTagPresentState = currentPresentState;
     // read and output uuid
-    byte *tagUUID = rfidModule.getCurrentTagSerial();
+    byte *tagUUID = nfcReader->getCurrentTagSerial();
     // check if new tag is equal to the last tag
     if (!memcmp(tagUUID, lastSeenTagID, 4)) {
       // the IDs are equal
-      Serial.print("RFID: Prior Tag Detected: ");
+      Serial.print("NFC: Prior Tag Detected: ");
     } else {
-      Serial.print("RFID: New Tag Detected: ");
+      Serial.print("NFC: New Tag Detected: ");
     }
     for (int i = 0; i < 4; i++) {
       lastSeenTagID[i] = tagUUID[i];
       Serial.print(tagUUID[i], HEX);
     }
     Serial.print("\n");
-    Serial.println(rfidModule.getCurrentTagData());
+    Serial.println(nfcReader->getCurrentTagData());
   }
 }
-*/

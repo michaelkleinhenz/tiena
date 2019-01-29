@@ -129,9 +129,30 @@ char* NFCReaderMFRC522::getCurrentTagData() {
   return this->currentTagData;
 }
 
-/*
-NFCPayload NFCReaderMFRC522::getPayload() {
-  // TODO: parse the this->currentTagData into NFCPayload
-  return NULL;
+NFCPayload* NFCReaderMFRC522::getPayload() {
+  // TODO handle errors
+    NFCPayload* payloadStruct = new NFCPayload();
+    // Returns first token (id)
+    char* token = strtok(this->currentTagData, "%");
+    if (token != NULL)
+      payloadStruct->id = token;
+    // Keep printing tokens while one of the 
+    // delimiters present in string. 
+    token = strtok(NULL, "%"); 
+    if (token != NULL)
+      payloadStruct->type = atoi(token);   
+    token = strtok(NULL, "%"); 
+    if (token != NULL)
+      payloadStruct->folder = atoi(token);
+    token = strtok(NULL, "%"); 
+    if (token != NULL)
+      payloadStruct->track = atoi(token);
+    token = strtok(NULL, "%"); 
+    if (token != NULL)
+      payloadStruct->title = token;
+    token = strtok(NULL, "%"); 
+    if (token != NULL)
+      payloadStruct->url = token;
+  return payloadStruct;
 };
-*/
+

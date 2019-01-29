@@ -14,16 +14,15 @@
  */
 
 #include "Arduino.h"
-#include "MP3Player.h"
-#include "DFRobotDFPlayerMini.h"
 
-#ifndef MP3DFPLAYER_H
-#define MP3DFPLAYER_H
+#ifndef MP3PLAYER_H
+#define MP3PLAYER_H
 
-class MP3PlayerDFPlayer : public MP3Player {
+class MP3Player {
   public:
-    MP3PlayerDFPlayer();
+    MP3Player();
     void init();
+    void loop();
     void setVolume(uint8_t volume);
     void volumeUp();
     void volumeDown();
@@ -41,8 +40,6 @@ class MP3PlayerDFPlayer : public MP3Player {
     uint8_t getCurrentVolume();
     void printStateToConsole();
     void printInfoToConsole();
-  private:
-    DFRobotDFPlayerMini mp3PlayerInstance;
 };
 
 #endif

@@ -41,6 +41,10 @@ void MP3PlayerDFPlayer::init() {
   delay(1000);
 }
 
+void MP3PlayerDFPlayer::loop() {
+  // NOP
+}
+
 void MP3PlayerDFPlayer::setVolume(uint8_t volume) {
   this->mp3PlayerInstance.volume(volume);
   delay(1000);

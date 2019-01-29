@@ -3,6 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/kleinhenz/.arduino15/packages/esp32/tools/**",
+                "/home/kleinhenz/.arduino15/packages/esp32/hardware/esp32/1.0.1/**",
                 "/home/kleinhenz/Arduino/hardware/espressif/esp32/cores/esp32",
                 "/home/kleinhenz/Arduino/libraries/DFRobotDFPlayerMini"
             ],
@@ -13,7 +15,8 @@
                     "/home/kleinhenz/Arduino/libraries/DFRobotDFPlayerMini"
                 ]
             },
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode": "clang-x64",
+            "forcedInclude": []
         }
     ],
     "version": 4

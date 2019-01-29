@@ -15,13 +15,25 @@
 
 #include "Arduino.h"
 #include "SPI.h"
-#include "MFRC522.h"
-#include "NFCReader.h"
+#include "PN532.h"
+#include "NfcAdapter.h"
+#include "PN532_SPI.h"
 
 #ifndef NFCPN532_H
 #define NFCPN532_H
 
-class NFCReaderPN532 : public NFCReader {
+#define MIMETYPE "app/tiena"
+
+typedef struct NFCPayload {
+	char* title;
+  char* id;
+  char* url;
+  uint8_t type;
+	uint8_t folder;
+	uint8_t track;
+} NFCPayload;
+
+class NFCReaderPN532 {
   public:
     NFCReaderPN532();
     void init();
@@ -29,17 +41,17 @@ class NFCReaderPN532 : public NFCReader {
     boolean tagPresent();
     byte* getCurrentTagSerial();
     char* getCurrentTagData();
-    //NFCPayload getPayload();
+    NFCPayload* getPayload();
   private:
     PN532_SPI *pn532spi;
     NfcAdapter *nfc;
     byte currentTagSerial[4];
-    char currentTagData[16*4];
+    char* currentTagData;
     bool nfc_tag_present_prev;
     bool nfc_tag_present;
     int _nfc_error_counter;
     bool _tag_found;
-    char *mimetype;
+    char* mimetype;
 };
 
 #endif

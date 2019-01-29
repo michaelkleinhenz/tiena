@@ -4,7 +4,9 @@
   Extension to the ESP8266Audio Library 
 */
 
-#include <SD_MMC.h>
+#include "Arduino.h"
+#include "SD_MMC.h"
+
 #include "AudioFileSource.h"
 
 #ifndef AUDIOFILESOURCEMMC_H

@@ -14,16 +14,19 @@
  */
 
 #include "Arduino.h"
-#include "DFRobotDFPlayerMini.h"
-#include "MP3Player.h"
+#include "AudioFileSourceMMC.h"
+#include "AudioFileSourceID3.h"
+#include "AudioGeneratorMP3.h"
+#include "AudioOutputI2S.h"
 
 #ifndef MP3PLAYERI2S_H
 #define MP3PLAYERI2S_H
 
-class MP3PlayerI2S : public MP3Player {
+class MP3PlayerI2S {
   public:
     MP3PlayerI2S();
     void init();
+    void loop();
     void setVolume(uint8_t volume);
     void volumeUp();
     void volumeDown();
@@ -41,6 +44,12 @@ class MP3PlayerI2S : public MP3Player {
     uint8_t getCurrentVolume();
     void printStateToConsole();
     void printInfoToConsole();
+  private:
+    static void metadataCallback(void *cbData, const char *type, bool isUnicode, const char *string);
+    AudioGeneratorMP3 *mp3AudioGenerator;
+    AudioFileSourceID3 *currentFileSourceID3;
+    AudioFileSourceMMC *currentFileSource;
+    AudioOutputI2S *i2sOutput;
 };
 
 #endif
