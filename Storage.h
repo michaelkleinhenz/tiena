@@ -14,21 +14,19 @@
  */
 
 #include "Arduino.h"
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
-#include <SPI.h>
+#include <Preferences.h>
 
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef STORAGE_H
+#define STORAGE_H
 
-class Display {
+class Storage {
   public:
-    Display();
-    void init();
-    void displayTrackView(char* title, uint8_t track, uint8_t volume);
-    void clear();
+    Storage();
+    uint8_t retrieveTrackForBook(char* bookId);
+    boolean storeTrackForBook(char* bookId, uint8_t track);
+    boolean clear();
   private:
-    Adafruit_ST7735* tft;
+    Preferences preferences;
 };
 
 #endif

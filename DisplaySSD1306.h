@@ -12,34 +12,23 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include "Arduino.h"
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
-#include <SPI.h>
+#include "Adafruit_SSD1306.h"
 
-#include "display.h"
+#include "Display.h"
 
-#define TFT_RST -1 
-#define TFT_CS 4
-#define TFT_DC 3
+#ifndef DISPLAYSSD1306_H
+#define DISPLAYSSD1306_H
 
-Display::Display() {
-  // NOP
-  this->tft = new Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
-}
+class DisplaySSD1306 : Display {
+  public:
+    DisplaySSD1306();
+    void init();
+    void displayTrackView(char* title, uint8_t track, uint8_t volume);
+    void clear();
+  private:
+    Adafruit_SSD1306 *display;
+};
 
-void Display::init() {
-  this->tft->initR(INITR_144GREENTAB);
-  this->clear();
-}
-
-void Display::displayTrackView(char* title, uint8_t track, uint8_t volume) {
-  // TODO
-}
-
-void Display::clear() {
-  this->tft->fillScreen(ST7735_BLACK);
-  this->tft->setCursor(0, 0);
-  delay(3000);
-}
-
+#endif

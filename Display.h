@@ -12,39 +12,18 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include "Arduino.h"
-#include <SPI.h>
-#include <MFRC522.h>
 
-#ifndef RFID_H
-#define RFID_H
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
-typedef struct RFIDPayload {
-	char* title;
-  char* id;
-  uint8_t type;
-	uint8_t folder;
-	uint8_t track;
-} RFIDPayload;
-
-class RFIDModule
-{
+class Display {
   public:
-    RFIDModule();
+    Display();
     void init();
-    void loop();
-    boolean tagPresent();
-    byte* getCurrentTagSerial();
-    char* getCurrentTagData();
-    //RFIDPayload getPayload();
-  private:
-    MFRC522* mfrc522;
-    byte currentTagSerial[4];
-    char currentTagData[16*4];
-    bool rfid_tag_present_prev;
-    bool rfid_tag_present;
-    int _rfid_error_counter;
-    bool _tag_found;
+    void displayTrackView(char* title, uint8_t track, uint8_t volume);
+    void clear();
 };
 
 #endif

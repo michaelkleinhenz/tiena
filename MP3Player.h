@@ -12,20 +12,33 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include "Arduino.h"
-#include <Preferences.h>
 
-#ifndef STORAGE_H
-#define STORAGE_H
+#ifndef MP3PLAYER_H
+#define MP3PLAYER_H
 
-class Storage {
+class MP3Player {
   public:
-    Storage();
-    uint8_t retrieveTrackForBook(char* bookId);
-    boolean storeTrackForBook(char* bookId, uint8_t track);
-    boolean clear();
-  private:
-    Preferences preferences;
+    MP3Player();
+    void init();
+    void setVolume(uint8_t volume);
+    void volumeUp();
+    void volumeDown();
+    void playFolder(uint8_t folderNumber, boolean looped);
+    void playFolderTrack(uint8_t folderNumber, uint8_t trackNumber);
+    void playTrack(int track);
+    void stop();
+    void pause();
+    void play();
+    void next();
+    void previous();
+    uint8_t getState();
+    uint8_t getNumFolders();
+    uint8_t getCurrentFileNumber();
+    uint8_t getCurrentVolume();
+    void printStateToConsole();
+    void printInfoToConsole();
 };
 
 #endif

@@ -13,12 +13,153 @@
  * GNU General Public License for more details.
  */
 
+#include "AudioFileSourceMMC.h"
+#include "AudioFileSourceID3.h"
+#include "AudioGeneratorMP3.h"
+#include "AudioOutputI2S.h"
+
+AudioGeneratorMP3 *mp3;
+AudioFileSourceID3 *id3;
+AudioFileSourceMMC *file;
+AudioOutputI2S *out;
+
+// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
+void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
+{
+  (void)cbData;
+  Serial.printf("ID3 callback for: %s = '", type);
+
+  if (isUnicode) {
+    string += 2;
+  }
+  
+  while (*string) {
+    char a = *(string++);
+    if (isUnicode) {
+      string++;
+    }
+    Serial.printf("%c", a);
+  }
+  Serial.printf("'\n");
+  Serial.flush();
+}
+
+PN532_HSU *pn532hsu;
+NfcAdapter *nfc;
+
+void setup(void) {
+    Serial.begin(115200);
+    Serial.println("NDEF Reader");
+    Serial1.begin(115200, SERIAL_8N1, 14, 27);
+    pn532hsu = new PN532_HSU(Serial1);
+    nfc = new NfcAdapter(*pn532hsu);
+    nfc->begin();
+/*
+    if(!SD.begin(4)){
+        Serial.println("Card Mount Failed");
+        return;
+    }
+  Serial.printf("mp3 start\n");
+
+  file = new AudioFileSourceSD("/01/001.mp3");
+  id3 = new AudioFileSourceID3(file);
+  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+  out = new AudioOutputI2S();
+  mp3 = new AudioGeneratorMP3();
+  mp3->begin(id3, out);
+  */
+}
+
+void loop(void) {
+    Serial.println("\nScan a NFC tag\n");
+    if (nfc->tagPresent())
+    {
+        NfcTag tag = nfc->read();
+        tag.print();
+    }
+    /*
+    if (mp3->isRunning()) {
+      if (!mp3->loop()) mp3->stop();
+    } else {
+      Serial.printf("mp3 done\n");
+    }
+    */
+    delay(5000);
+}
+
+/*
+#include <Arduino.h>
+#include <WiFi.h>
+#include "SD.h"
+
+#include "AudioFileSourceSD.h"
+#include "AudioFileSourceID3.h"
+#include "AudioGeneratorMP3.h"
+#include "AudioOutputI2S.h"
+
+AudioGeneratorMP3 *mp3;
+AudioFileSourceID3 *id3;
+AudioFileSourceSD *file;
+AudioOutputI2S *out;
+
+// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
+void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
+{
+  (void)cbData;
+  Serial.printf("ID3 callback for: %s = '", type);
+
+  if (isUnicode) {
+    string += 2;
+  }
+  
+  while (*string) {
+    char a = *(string++);
+    if (isUnicode) {
+      string++;
+    }
+    Serial.printf("%c", a);
+  }
+  Serial.printf("'\n");
+  Serial.flush();
+}
+
+void setup()
+{
+  WiFi.mode(WIFI_OFF); 
+  Serial.begin(115200);
+  delay(1000);
+  if(!SD.begin(4)){
+        Serial.println("Card Mount Failed");
+        return;
+    }
+  Serial.printf("mp3 start\n");
+
+  file = new AudioFileSourceSD("/01/001.mp3");
+  id3 = new AudioFileSourceID3(file);
+  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+  out = new AudioOutputI2S();
+  mp3 = new AudioGeneratorMP3();
+  mp3->begin(id3, out);
+}
+
+void loop()
+{
+  if (mp3->isRunning()) {
+    if (!mp3->loop()) mp3->stop();
+  } else {
+    Serial.printf("mp3 done\n");
+    delay(1000);
+  }
+}
+*/
+
+/*
 #include "rfid.h"
 #include "mp3.h"
 
 #define BUTTON_A_PIN 15
 #define BUTTON_B_PIN 2
-#define BUTTON_C_PIN 4
+#define BUTTON_C_PIN 13
 
 int buttonAState = 0;
 int buttonBState = 0;
@@ -40,11 +181,6 @@ void setup() {
   pinMode(BUTTON_A_PIN, INPUT);
   pinMode(BUTTON_B_PIN, INPUT);
   pinMode(BUTTON_C_PIN, INPUT);
-
-  /*
-  mp3Player.setVolume(30);
-  mp3Player.playTrack(1);
-  */
 }
 
 void loopButtons() {
@@ -75,16 +211,6 @@ void loop() {
   // button loop
   loopButtons();
 
-  // handle mp3 events  
-  /*
-  static unsigned long timer = millis();
-  if (millis() - timer > 3000) {
-    timer = millis();
-    mp3Player.next(); //Play next mp3 every 3 second.
-  }
-  mp3Player.printStateToConsole();
-  */
-
   // handle rfid events
   boolean currentPresentState = rfidModule.tagPresent();
   if (!currentPresentState && lastTagPresentState) {
@@ -111,3 +237,4 @@ void loop() {
     Serial.println(rfidModule.getCurrentTagData());
   }
 }
+*/

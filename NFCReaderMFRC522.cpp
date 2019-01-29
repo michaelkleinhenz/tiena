@@ -12,40 +12,41 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#include "Arduino.h"
-#include <SPI.h>
-#include <MFRC522.h>
 
-#include "rfid.h"
+#include "Arduino.h"
+#include "SPI.h"
+#include "MFRC522.h"
+
+#include "NFCReaderMFRC522.h"
 
 #define RST_PIN 22
 #define SS_PIN 21
 
-RFIDModule::RFIDModule() {
+NFCReaderMFRC522::NFCReaderMFRC522() {
   // NOP
 }
 
-void RFIDModule::init() {
+void NFCReaderMFRC522::init() {
   Serial.println(F("Initializing SPI Bus..."));
   SPI.begin();
   Serial.println("SPI Bus ready.");
-  Serial.println(F("Initializing RFID Module..."));
+  Serial.println(F("Initializing NFC Module..."));
   this->mfrc522 = new MFRC522(SS_PIN, RST_PIN);
-  this->rfid_tag_present_prev = false;
-  this->rfid_tag_present = false;
-  this->_rfid_error_counter = 0;
+  this->nfc_tag_present_prev = false;
+  this->nfc_tag_present = false;
+  this->_nfc_error_counter = 0;
   this->_tag_found = false;
   mfrc522->PCD_Init();
-  Serial.println("RFID Module ready.");
+  Serial.println("NFC Module ready.");
   mfrc522->PCD_DumpVersionToSerial();
 }
 
-void RFIDModule::loop() {
+void NFCReaderMFRC522::loop() {
   // tag presence detection by metamorphious
   // https://github.com/miguelbalboa/rfid/issues/352
-  this->rfid_tag_present_prev = this->rfid_tag_present;
-  this->_rfid_error_counter += 1;
-  if (this->_rfid_error_counter > 25) {
+  this->nfc_tag_present_prev = this->nfc_tag_present;
+  this->_nfc_error_counter += 1;
+  if (this->_nfc_error_counter > 25) {
     this->_tag_found = false;
   }
   // detect tag without looking for collisions
@@ -110,27 +111,27 @@ void RFIDModule::loop() {
     // terminate string with \0
     this->currentTagData[strIndex] = '\0';
     // reset the error counters
-    this->_rfid_error_counter = 0;
+    this->_nfc_error_counter = 0;
     this->_tag_found = true;        
   }
-  this->rfid_tag_present = this->_tag_found;  
+  this->nfc_tag_present = this->_tag_found;  
 }
 
-boolean RFIDModule::tagPresent() {
-  return this->rfid_tag_present;
+boolean NFCReaderMFRC522::tagPresent() {
+  return this->nfc_tag_present;
 }
 
-byte* RFIDModule::getCurrentTagSerial() {
+byte* NFCReaderMFRC522::getCurrentTagSerial() {
   return this->currentTagSerial;
 }
 
-char* RFIDModule::getCurrentTagData() {
+char* NFCReaderMFRC522::getCurrentTagData() {
   return this->currentTagData;
 }
 
 /*
-RFIDPayload RFIDModule::getPayload() {
-  // TODO: parse the this->currentTagData into RFIDPayload
+NFCPayload NFCReaderMFRC522::getPayload() {
+  // TODO: parse the this->currentTagData into NFCPayload
   return NULL;
 };
 */

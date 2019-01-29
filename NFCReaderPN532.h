@@ -12,35 +12,34 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include "Arduino.h"
-#include "DFRobotDFPlayerMini.h"
+#include "SPI.h"
+#include "MFRC522.h"
+#include "NFCReader.h"
 
-#ifndef MP3_H
-#define MP3_H
+#ifndef NFCPN532_H
+#define NFCPN532_H
 
-class MP3Player {
+class NFCReaderPN532 : public NFCReader {
   public:
-    MP3Player();
+    NFCReaderPN532();
     void init();
-    void setVolume(uint8_t volume);
-    void volumeUp();
-    void volumeDown();
-    void playFolder(uint8_t folderNumber, boolean looped);
-    void playFolderTrack(uint8_t folderNumber, uint8_t trackNumber);
-    void playTrack(int track);
-    void stop();
-    void pause();
-    void play();
-    void next();
-    void previous();
-    uint8_t getState();
-    uint8_t getNumFolders();
-    uint8_t getCurrentFileNumber();
-    uint8_t getCurrentVolume();
-    void printStateToConsole();
-    void printInfoToConsole();
+    void loop();
+    boolean tagPresent();
+    byte* getCurrentTagSerial();
+    char* getCurrentTagData();
+    //NFCPayload getPayload();
   private:
-    DFRobotDFPlayerMini mp3PlayerInstance;
+    PN532_SPI *pn532spi;
+    NfcAdapter *nfc;
+    byte currentTagSerial[4];
+    char currentTagData[16*4];
+    bool nfc_tag_present_prev;
+    bool nfc_tag_present;
+    int _nfc_error_counter;
+    bool _tag_found;
+    char *mimetype;
 };
 
 #endif

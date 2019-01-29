@@ -12,30 +12,32 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 #include "Arduino.h"
-#include <Preferences.h>
+#include "SPI.h"
+#include "MFRC522.h"
+#include "NFCReader.h"
 
-#include "storage.h"
+#ifndef NFCMFRC522_H
+#define NFCMFRC522_H
 
-Storage::Storage() {
-  // NOP
-}
+class NFCReaderMFRC522 : public NFCReader {
+  public:
+    RFIDModuleMFRC522();
+    void init();
+    void loop();
+    boolean tagPresent();
+    byte* getCurrentTagSerial();
+    char* getCurrentTagData();
+    //NFCPayload getPayload();
+  private:
+    MFRC522* mfrc522;
+    byte currentTagSerial[4];
+    char currentTagData[16*4];
+    bool nfc_tag_present_prev;
+    bool nfc_tag_present;
+    int _nfc_error_counter;
+    bool _tag_found;
+};
 
-uint8_t Storage::retrieveTrackForBook(char* bookId) {
-  this->preferences.begin("tiena", true);
-  uint8_t track = this->preferences.getUInt(bookId, 0);
-  this->preferences.end();
-  return track;
-}
-
-boolean Storage::storeTrackForBook(char* bookId, uint8_t track) {
-  this->preferences.begin("tiena", true);
-  this->preferences.putUInt(bookId, track);
-  this->preferences.end();
-  return true;
-}
-
-boolean Storage::clear() {
-  this->preferences.begin("tiena", true);
-  this->preferences.clear();
-}
+#endif
