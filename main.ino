@@ -16,12 +16,8 @@
 #include <pthread.h>
 #include <WiFi.h>
 
-#include "Display.h"
-#include "MP3Player.h"
-#include "NFCReader.h"
-
 #include "DisplaySSD1306.h"
-#include "MP3PlayerI2S.h"
+//#include "MP3PlayerI2S.h"
 #include "NFCReaderPN532.h"
 
 #define BUTTON_A_PIN 15
@@ -32,12 +28,13 @@ int buttonAState = 0;
 int buttonBState = 0;
 int buttonCState = 0;
 
-MP3PlayerI2S *mp3Player;
+//MP3PlayerI2S *mp3Player;
 NFCReaderPN532 *nfcReader;
 
 byte lastSeenTagID[4];
 boolean lastTagPresentState = false;
 
+/*
 void *startLoopSound(void *mp3PlayerImpl) {
   // when this terminates, the thread ends.
   // this should run forever.
@@ -45,6 +42,7 @@ void *startLoopSound(void *mp3PlayerImpl) {
     ((MP3PlayerI2S*)mp3PlayerImpl)->loop();
   }
 }
+*/
 
 void *startLoopNFC(void *nfcReaderImpl) {
   // when this terminates, the thread ends.
@@ -57,10 +55,12 @@ void *startLoopNFC(void *nfcReaderImpl) {
 void startThreads() {
   pthread_t threads[2];
   int returnValue;
+  /*
   returnValue = pthread_create(&threads[0], NULL, startLoopSound, (void*)mp3Player);
   if (returnValue) {
     Serial.println("SYS: An error has occurred on starting sound loop");
   }
+  */
   returnValue = pthread_create(&threads[1], NULL, startLoopNFC, (void*)nfcReader);
   if (returnValue) {
     Serial.println("SYS: An error has occurred on starting NFC loop");
@@ -71,18 +71,15 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   Serial.println("Tiena RFID-based Audiobook Player");
-  mp3Player = new MP3PlayerI2S();
+  //mp3Player = new MP3PlayerI2S();
   nfcReader = new NFCReaderPN532();
-  mp3Player->init();
+  //mp3Player->init();
   nfcReader->init();
   //pinMode(BUTTON_A_PIN, INPUT);
   //pinMode(BUTTON_B_PIN, INPUT);
   //pinMode(BUTTON_C_PIN, INPUT);
   startThreads();
   Serial.println("Boot complete.");
-
-  // DEMO
-  mp3Player->play();
 }
 
 void loopButtons() {

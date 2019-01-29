@@ -30,9 +30,8 @@ class MP3PlayerI2S {
     void setVolume(uint8_t volume);
     void volumeUp();
     void volumeDown();
-    void playFolder(uint8_t folderNumber, boolean looped);
+    void playFolder(uint8_t folderNumber);
     void playFolderTrack(uint8_t folderNumber, uint8_t trackNumber);
-    void playTrack(int track);
     void stop();
     void pause();
     void play();

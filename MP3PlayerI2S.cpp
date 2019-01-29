@@ -79,9 +79,8 @@ void MP3PlayerI2S::volumeDown() {
   // TODO implement
 }
 
-void MP3PlayerI2S::playFolder(uint8_t folderNumber, boolean looped) {
-  //Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
-  // TODO implement
+void MP3PlayerI2S::playFolder(uint8_t folderNumber) {
+  this->playFromFolderTrack(folderNumber, 0);
 }
 
 void MP3PlayerI2S::stop() {
@@ -95,21 +94,22 @@ void MP3PlayerI2S::pause() {
 }
 
 void MP3PlayerI2S::play() {
-  Serial.printf("MP3: Playing Audio\n");
+  Serial.printf("MP3: Resume Playing Audio\n");
   this->currentFileSource = new AudioFileSourceMMC("/01/001.mp3");
   this->currentFileSourceID3 = new AudioFileSourceID3(currentFileSource);
   this->currentFileSourceID3->RegisterMetadataCB(this->metadataCallback, (void*)"ID3TAG");
   this->mp3AudioGenerator->begin(currentFileSourceID3, i2sOutput);
 }
 
-void MP3PlayerI2S::playTrack(int track) {
-  //Serial.printf("MP3: Playing Track %d\n", this->mp3PlayerInstance.readCurrentFileNumber());
-  // TODO implement
-}
-
-void MP3PlayerI2S::playFolderTrack(uint8_t folderNumber, uint8_t trackNumber) {
-  //Serial.printf("MP3: Playing Track %d of folder %d\n", trackNumber, folderNumber);
-  // TODO implement
+void MP3PlayerI2S::playFromFolderTrack(uint8_t folderNumber, uint8_t trackNumber) {
+  Serial.printf("MP3: Playing from Track %d of folder %d\n", trackNumber, folderNumber);
+  char buffer[12];
+  sprintf(buffer, "/%02d/%03d.mp3", folderNumber, trackNumber);
+  Serial.printf("MP3: Playing File %s\n", buffer);
+  this->currentFileSource = new AudioFileSourceMMC(buffer);
+  this->currentFileSourceID3 = new AudioFileSourceID3(currentFileSource);
+  this->currentFileSourceID3->RegisterMetadataCB(this->metadataCallback, (void*)"ID3TAG");
+  this->mp3AudioGenerator->begin(currentFileSourceID3, i2sOutput);
 }
 
 void MP3PlayerI2S::next() {

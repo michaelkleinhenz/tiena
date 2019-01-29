@@ -16,12 +16,10 @@
 #include "Arduino.h"
 #include "Adafruit_SSD1306.h"
 
-#include "Display.h"
-
 #ifndef DISPLAYSSD1306_H
 #define DISPLAYSSD1306_H
 
-class DisplaySSD1306 : Display {
+class DisplaySSD1306 {
   public:
     DisplaySSD1306();
     void init();
