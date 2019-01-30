@@ -48,7 +48,61 @@ void *startLoopNFC(void *nfcReaderImpl) {
   // when this terminates, the thread ends.
   // this should run forever.
   while (true) {
+    Serial.println("NFC: running loop");
     ((NFCReaderPN532*)nfcReaderImpl)->loop();
+    if (((NFCReaderPN532*)nfcReaderImpl)->tagPresent()) {
+      Serial.println("NFC: loop completed, tag present");
+      NFCPayload* payload = ((NFCReaderPN532*)nfcReaderImpl)->getPayload();
+      Serial.printf("NFC: tag id '%s'\n", payload->id);
+      Serial.printf("NFC: tag type '%02d'\n", payload->type);
+      Serial.printf("NFC: tag title '%s'\n", payload->title);
+      Serial.printf("NFC: tag folder '%02d'\n", payload->folder);
+      Serial.printf("NFC: tag track '%03d'\n", payload->track);
+      Serial.printf("NFC: tag url '%s'\n", payload->url);
+    } else {
+      Serial.println("NFC: loop completed, no tag present");
+    }
+    // only checking NFC every 2 seconds
+    delay(2000);
+    /*
+    Serial.println("MAIN 1");
+    // handle nfc events
+    boolean currentPresentState = ((NFCReaderPN532*)nfcReaderImpl)->tagPresent();
+    Serial.println("MAIN 2");
+    if (!currentPresentState && lastTagPresentState) {
+      Serial.println("MAIN 3");
+      Serial.println("NFC: Tag Removed");
+      lastTagPresentState = currentPresentState;
+    }
+    Serial.println("MAIN 4");
+    if (currentPresentState && !lastTagPresentState) {
+      Serial.println("NFC: Tag Detected");
+      lastTagPresentState = currentPresentState;
+      // read and output uuid
+      Serial.println("MAIN 5");
+      byte *tagUUID = ((NFCReaderPN532*)nfcReaderImpl)->getCurrentTagId();
+      Serial.println("MAIN 6");
+      // check if new tag is equal to the last tag
+      if (!memcmp(tagUUID, lastSeenTagID, 4)) {
+        Serial.println("MAIN 7");
+        // the IDs are equal
+        Serial.print("NFC: Prior Tag Detected: ");
+      } else {
+        Serial.println("MAIN 8");
+        Serial.print("NFC: New Tag Detected: ");
+      }
+      Serial.println("MAIN 9");
+      for (int i = 0; i < 4; i++) {
+        lastSeenTagID[i] = tagUUID[i];
+        Serial.print(tagUUID[i], HEX);
+      }
+      Serial.println("MAIN 10");
+      Serial.print("\n");
+      Serial.println(((NFCReaderPN532*)nfcReaderImpl)->getCurrentTagData());
+      Serial.println("MAIN 11");
+    }
+    Serial.println("MAIN 12");
+  */
   }
 }
 
@@ -107,29 +161,5 @@ void loop() {
   // button loop
   //loopButtons();
 
-  // handle nfc events
-  boolean currentPresentState = nfcReader->tagPresent();
-  if (!currentPresentState && lastTagPresentState) {
-    Serial.println("NFC: Tag Removed");
-    lastTagPresentState = currentPresentState;
-  }
-  if (currentPresentState && !lastTagPresentState) {
-    Serial.println("NFC: Tag Detected");
-    lastTagPresentState = currentPresentState;
-    // read and output uuid
-    byte *tagUUID = nfcReader->getCurrentTagSerial();
-    // check if new tag is equal to the last tag
-    if (!memcmp(tagUUID, lastSeenTagID, 4)) {
-      // the IDs are equal
-      Serial.print("NFC: Prior Tag Detected: ");
-    } else {
-      Serial.print("NFC: New Tag Detected: ");
-    }
-    for (int i = 0; i < 4; i++) {
-      lastSeenTagID[i] = tagUUID[i];
-      Serial.print(tagUUID[i], HEX);
-    }
-    Serial.print("\n");
-    Serial.println(nfcReader->getCurrentTagData());
-  }
+  
 }

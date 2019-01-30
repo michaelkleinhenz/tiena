@@ -14,7 +14,6 @@
  */
 
 #include "Arduino.h"
-#include "string.h"
 #include "SPI.h"
 #include "PN532.h"
 #include "NfcAdapter.h"
@@ -33,7 +32,7 @@ void NFCReaderPN532::init() {
   this->mimetype = MIMETYPE;
   Serial.println(F("Initializing SPI Bus..."));
   SPI.begin();
-  Serial.println("SPI Bus ready.");
+  Serial.println("SPI Bus ready");
   Serial.println(F("Initializing NFC Module..."));
   this->pn532spi = new PN532_SPI(SPI, 5);
   this->nfc = new NfcAdapter(*pn532spi);
@@ -42,50 +41,52 @@ void NFCReaderPN532::init() {
   this->_nfc_error_counter = 0;
   this->_tag_found = false;
   this->nfc->begin();
-  Serial.println("NFC Module ready.");
+  Serial.println("NFC Module ready");
 }
 
 void NFCReaderPN532::loop() {
   if (this->nfc->tagPresent()) {
     this->nfc_tag_present_prev = this->nfc_tag_present;
     NfcTag tag = this->nfc->read();
-    uint8_t uidLength = tag.getUidLength();
-    byte* uidBytes = new byte[uidLength];
-    tag.getUid(uidBytes, uidLength);
-    for (int i=0; i<4; i++){
-      this->currentTagSerial[i] = uidBytes[i];
-    }
+    // TODO: check if we have a memory leak or lost memory here
+    this->currentTagId = tag.getUidString();
+    Serial.printf("NFC: detected tag id '%s'\n", this->currentTagId.c_str());
     if (tag.hasNdefMessage()) {
         NdefMessage ndefMessage = tag.getNdefMessage();
         if (ndefMessage.getRecordCount()==1) {
           NdefRecord record = ndefMessage.getRecord(0);
           if (record.getTnf()==TNF_MIME_MEDIA) {
-            int typeLength = record.getTypeLength();
-            byte* type = new byte[typeLength];
-            record.getType(type);
-            if (memcmp(this->mimetype, type, strlen(MIMETYPE))) {
-              // mimetype does not match, don't process
-              Serial.printf("NFC: Tag record is not of mimetype '%s': %s\n", this->mimetype, type);
-              return;
-            };
-            int payloadLength = record.getPayloadLength();
-            byte* payloadBuffer = new byte(payloadLength);
-            this->currentTagData = new char(payloadLength);
-            record.getPayload(payloadBuffer);
-            for (int i=0; i<payloadLength; i++) {
-              this->currentTagData[i] = char(payloadBuffer[i]);
+            String type = record.getType();
+            Serial.printf("NFC: tag has media message with type '%s'\n", type.c_str());
+            if (!type.equalsIgnoreCase(this->mimetype)) {
+              Serial.printf("NFC: Tag record is not of mimetype '%s': %s\n", this->mimetype, type.c_str());
             }
+            int payloadLength = record.getPayloadLength();
+            byte* payloadBuffer = new byte[payloadLength];
+            Serial.printf("NFC: reading tag payload, length %d\n", payloadLength);
+            record.getPayload(payloadBuffer);
+            Serial.println("NFC: payload read completed");
+            // TODO: check if we have a memory leak or lost memory here
+            this->currentTagData = "";
+            for (int i=0; i<payloadLength; i++) {
+              this->currentTagData += char(payloadBuffer[i]);
+            }
+            Serial.printf("NFC: payload data: '%s'\n", this->currentTagData.c_str());
+            this->nfc_tag_present = true;
           } else {
-            Serial.println("NFC: Tag record is not of type TNF_MIME_MEDIA.");
+            Serial.println("NFC: tag record is not of type TNF_MIME_MEDIA.");
+            this->nfc_tag_present = false;
           }
         } else {
-          Serial.println("NFC: Tag has more or less than one NDEF message which is unsupported.");
+          Serial.println("NFC: tag has more or less than one NDEF message which is unsupported");
+          this->nfc_tag_present = false;
         }
     }
   } else {
+    Serial.println("NFC: no tag present");
     this->nfc_tag_present = false;
-    for (int i=0; i<4; i++){
-      this->currentTagSerial[i] = 0;
+    for (int i=0; i<4; i++) {
+      this->currentTagId[i] = 0;
     }
   }
 }
@@ -94,38 +95,41 @@ boolean NFCReaderPN532::tagPresent() {
   return this->nfc_tag_present;
 }
 
-byte* NFCReaderPN532::getCurrentTagSerial() {
-  return this->currentTagSerial;
+String NFCReaderPN532::getCurrentTagId() {
+  return this->currentTagId;
 }
 
-char* NFCReaderPN532::getCurrentTagData() {
+String NFCReaderPN532::getCurrentTagData() {
   return this->currentTagData;
 }
 
 NFCPayload* NFCReaderPN532::getPayload() {
-  // TODO handle errors
-    NFCPayload* payloadStruct = new NFCPayload();
-    // Returns first token (id)
-    char* token = strtok(this->currentTagData, "%");
-    if (token != NULL)
-      payloadStruct->id = token;
-    // Keep printing tokens while one of the 
-    // delimiters present in string. 
-    token = strtok(NULL, "%"); 
-    if (token != NULL)
-      payloadStruct->type = atoi(token);   
-    token = strtok(NULL, "%"); 
-    if (token != NULL)
-      payloadStruct->folder = atoi(token);
-    token = strtok(NULL, "%"); 
-    if (token != NULL)
-      payloadStruct->track = atoi(token);
-    token = strtok(NULL, "%"); 
-    if (token != NULL)
-      payloadStruct->title = token;
-    token = strtok(NULL, "%"); 
-    if (token != NULL)
-      payloadStruct->url = token;
+  // TODO handle errors, check if there is a memory leak here
+  NFCPayload* payloadStruct = new NFCPayload();
+  int length = this->currentTagData.length()+1;
+  char* buffer = new char[length];
+  this->currentTagData.toCharArray(buffer, length);
+  // Returns first token (id)
+  char* token = strtok(buffer, "%");
+  if (token != NULL)
+    payloadStruct->id = token;
+  // Keep printing tokens while one of the 
+  // delimiters present in string. 
+  token = strtok(NULL, "%"); 
+  if (token != NULL)
+    payloadStruct->type = atoi(token);   
+  token = strtok(NULL, "%"); 
+  if (token != NULL)
+    payloadStruct->folder = atoi(token);
+  token = strtok(NULL, "%"); 
+  if (token != NULL)
+    payloadStruct->track = atoi(token);
+  token = strtok(NULL, "%"); 
+  if (token != NULL)
+    payloadStruct->title = token;
+  token = strtok(NULL, "%"); 
+  if (token != NULL)
+    payloadStruct->url = token;
   return payloadStruct;
 };
 

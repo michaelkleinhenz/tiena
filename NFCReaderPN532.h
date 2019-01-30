@@ -24,6 +24,13 @@
 
 #define MIMETYPE "app/tiena"
 
+/*
+  payload format:
+    id%type%folder%track%title%url
+  example:
+    tenner1%01%42%1%Book Title%http://some.address/archive.zip
+*/
+
 typedef struct NFCPayload {
 	char* title;
   char* id;
@@ -39,14 +46,14 @@ class NFCReaderPN532 {
     void init();
     void loop();
     boolean tagPresent();
-    byte* getCurrentTagSerial();
-    char* getCurrentTagData();
+    String getCurrentTagId();
+    String getCurrentTagData();
     NFCPayload* getPayload();
   private:
     PN532_SPI *pn532spi;
     NfcAdapter *nfc;
-    byte currentTagSerial[4];
-    char* currentTagData;
+    String currentTagId;
+    String currentTagData;
     bool nfc_tag_present_prev;
     bool nfc_tag_present;
     int _nfc_error_counter;
