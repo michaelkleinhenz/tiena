@@ -43,15 +43,6 @@ void MP3PlayerI2S::metadataCallback(void *cbData, const char *type, bool isUnico
 
 void MP3PlayerI2S::init() {
   Serial.println("Initializing MP3 Module...");
-  if(!SD_MMC.begin()) {
-    Serial.println("MP3: Card Reader Init Failed");
-    return;
-  }
-  uint8_t cardType = SD_MMC.cardType();
-  if  (cardType == CARD_NONE) {
-    Serial.println("MP3: No SD_MMC Card found");
-    return;
-  }
   this->i2sOutput = new AudioOutputI2S();
   this->mp3AudioGenerator = new AudioGeneratorMP3();
   Serial.println("MP3 Module ready.");

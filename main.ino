@@ -31,8 +31,30 @@ int buttonCState = 0;
 //MP3PlayerI2S *mp3Player;
 NFCReaderPN532 *nfcReader;
 
-byte lastSeenTagID[4];
+String lastSeenTagID;
 boolean lastTagPresentState = false;
+
+void downloadBook() {
+  File f = SD_MMC.open("/downloads/test.pdf", FILE_WRITE);
+  if (f) {
+    http.begin("https://www.dropbox.com/s/0nt98kwsnokmqzd/2003Jangatesmoviemaker.pdf?dl=1");
+    int httpCode = http.GET();
+    if (httpCode > 0) {
+        if (httpCode == HTTP_CODE_OK) {
+            WiFiClient* stream = http.getStreamPtr();
+            while (stream->available()) {
+                char c = stream->read();
+                f.print(c);
+            }
+        }
+    }
+    else {
+        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    }
+    f.close();
+    http.end();
+  }
+}
 
 /*
 void *startLoopSound(void *mp3PlayerImpl) {
@@ -50,64 +72,71 @@ void *startLoopNFC(void *nfcReaderImpl) {
   while (true) {
     Serial.println("NFC: running loop");
     ((NFCReaderPN532*)nfcReaderImpl)->loop();
+    Serial.print("NFC: loop completed - ");
+    boolean currentPresentState = ((NFCReaderPN532*)nfcReaderImpl)->tagPresent();
     if (((NFCReaderPN532*)nfcReaderImpl)->tagPresent()) {
-      Serial.println("NFC: loop completed, tag present");
-      NFCPayload* payload = ((NFCReaderPN532*)nfcReaderImpl)->getPayload();
-      Serial.printf("NFC: tag id '%s'\n", payload->id);
-      Serial.printf("NFC: tag type '%02d'\n", payload->type);
-      Serial.printf("NFC: tag title '%s'\n", payload->title);
-      Serial.printf("NFC: tag folder '%02d'\n", payload->folder);
-      Serial.printf("NFC: tag track '%03d'\n", payload->track);
-      Serial.printf("NFC: tag url '%s'\n", payload->url);
+      Serial.println("tag present");
     } else {
-      Serial.println("NFC: loop completed, no tag present");
+      Serial.println("no valid tag present");
+    }
+    if (!currentPresentState && lastTagPresentState) {
+      Serial.println("NFC: tag was removed");
+      lastTagPresentState = currentPresentState;
+    }
+    if (currentPresentState && !lastTagPresentState) {
+      Serial.println("NFC: tag detected");
+      lastTagPresentState = currentPresentState;
+      // check if new tag is equal to the last tag
+      String currentTagId = ((NFCReaderPN532*)nfcReaderImpl)->getCurrentTagId();
+      if (lastSeenTagID && lastSeenTagID.equals(currentTagId)) {
+        // the IDs are equal
+        Serial.println("NFC: prior tag detected");
+        // TODO check if we're plaing, if not, start. If yes, do nothing
+      } else {
+        Serial.println("NFC: new tag detected");
+        NFCPayload* payload = ((NFCReaderPN532*)nfcReaderImpl)->getPayload();
+        Serial.printf("NFC: tag id '%s'\n", payload->id);
+        Serial.printf("NFC: tag type '%02d'\n", payload->type);
+        Serial.printf("NFC: tag title '%s'\n", payload->title);
+        Serial.printf("NFC: tag folder '%02d'\n", payload->folder);
+        Serial.printf("NFC: tag track '%03d'\n", payload->track);
+        Serial.printf("NFC: tag url '%s'\n", payload->url);
+        // TODO download, store, start playback
+      }
+      lastSeenTagID = currentTagId;
     }
     // only checking NFC every 2 seconds
+    Serial.println("NFC: sleeping 2s");
     delay(2000);
-    /*
-    Serial.println("MAIN 1");
-    // handle nfc events
-    boolean currentPresentState = ((NFCReaderPN532*)nfcReaderImpl)->tagPresent();
-    Serial.println("MAIN 2");
-    if (!currentPresentState && lastTagPresentState) {
-      Serial.println("MAIN 3");
-      Serial.println("NFC: Tag Removed");
-      lastTagPresentState = currentPresentState;
+  }
+}
+
+void *loopButtons(void *param) {
+  while (true) {
+    buttonAState = digitalRead(BUTTON_A_PIN);
+    if (buttonAState == 1) {
+      Serial.println("KEYS: detected key A pressed");
     }
-    Serial.println("MAIN 4");
-    if (currentPresentState && !lastTagPresentState) {
-      Serial.println("NFC: Tag Detected");
-      lastTagPresentState = currentPresentState;
-      // read and output uuid
-      Serial.println("MAIN 5");
-      byte *tagUUID = ((NFCReaderPN532*)nfcReaderImpl)->getCurrentTagId();
-      Serial.println("MAIN 6");
-      // check if new tag is equal to the last tag
-      if (!memcmp(tagUUID, lastSeenTagID, 4)) {
-        Serial.println("MAIN 7");
-        // the IDs are equal
-        Serial.print("NFC: Prior Tag Detected: ");
-      } else {
-        Serial.println("MAIN 8");
-        Serial.print("NFC: New Tag Detected: ");
-      }
-      Serial.println("MAIN 9");
-      for (int i = 0; i < 4; i++) {
-        lastSeenTagID[i] = tagUUID[i];
-        Serial.print(tagUUID[i], HEX);
-      }
-      Serial.println("MAIN 10");
-      Serial.print("\n");
-      Serial.println(((NFCReaderPN532*)nfcReaderImpl)->getCurrentTagData());
-      Serial.println("MAIN 11");
+    if (buttonAState == 0) {
     }
-    Serial.println("MAIN 12");
-  */
+    buttonBState = digitalRead(BUTTON_B_PIN);
+    if (buttonBState == 1) {
+      Serial.println("KEYS: detected key B pressed");
+    }
+    if (buttonBState == 0) {
+    }
+    buttonCState = digitalRead(BUTTON_C_PIN);
+    if (buttonCState == 1) {
+      Serial.println("KEYS: detected key C pressed");
+    }
+    if (buttonCState == 0) {
+    }
+    delay(10);
   }
 }
 
 void startThreads() {
-  pthread_t threads[2];
+  pthread_t threads[3];
   int returnValue;
   /*
   returnValue = pthread_create(&threads[0], NULL, startLoopSound, (void*)mp3Player);
@@ -117,14 +146,29 @@ void startThreads() {
   */
   returnValue = pthread_create(&threads[1], NULL, startLoopNFC, (void*)nfcReader);
   if (returnValue) {
-    Serial.println("SYS: An error has occurred on starting NFC loop");
+    Serial.println("SYS: an error has occurred when starting NFC loop");
   }
+  /*
+  returnValue = pthread_create(&threads[2], NULL, startLoopButtons, (void*)-1);
+  if (returnValue) {
+    Serial.println("SYS: An error has occurred on starting buttons loop");
+  }
+  */
 }
 
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   Serial.println("Tiena RFID-based Audiobook Player");
+  if(!SD_MMC.begin()) {
+    Serial.println("MP3: Card Reader Init Failed");
+    return;
+  }
+  uint8_t cardType = SD_MMC.cardType();
+  if  (cardType == CARD_NONE) {
+    Serial.println("MP3: No SD_MMC Card found");
+    return;
+  }
   //mp3Player = new MP3PlayerI2S();
   nfcReader = new NFCReaderPN532();
   //mp3Player->init();
@@ -133,33 +177,9 @@ void setup() {
   //pinMode(BUTTON_B_PIN, INPUT);
   //pinMode(BUTTON_C_PIN, INPUT);
   startThreads();
-  Serial.println("Boot complete.");
-}
-
-void loopButtons() {
-  buttonAState = digitalRead(BUTTON_A_PIN);
-  if (buttonAState == 1) {
-    Serial.println("KEYS: Detected Key A Pressed");
-  }
-  if (buttonAState == 0) {
-  }
-  buttonBState = digitalRead(BUTTON_B_PIN);
-  if (buttonBState == 1) {
-    Serial.println("KEYS: Detected Key B Pressed");
-  }
-  if (buttonBState == 0) {
-  }
-  buttonCState = digitalRead(BUTTON_C_PIN);
-  if (buttonCState == 1) {
-    Serial.println("KEYS: Detected Key C Pressed");
-  }
-  if (buttonCState == 0) {
-  }
+  Serial.println("SYS: boot complete");
 }
 
 void loop() {
-  // button loop
-  //loopButtons();
-
-  
+  // NOP
 }

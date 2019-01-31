@@ -48,7 +48,9 @@ void NFCReaderPN532::loop() {
   if (this->nfc->tagPresent()) {
     this->nfc_tag_present_prev = this->nfc_tag_present;
     NfcTag tag = this->nfc->read();
-    // TODO: check if we have a memory leak or lost memory here
+    // TODO check if this works
+    //delete this->currentTagId;
+    //this->currentTagId = NULL;
     this->currentTagId = tag.getUidString();
     Serial.printf("NFC: detected tag id '%s'\n", this->currentTagId.c_str());
     if (tag.hasNdefMessage()) {
@@ -66,11 +68,14 @@ void NFCReaderPN532::loop() {
             Serial.printf("NFC: reading tag payload, length %d\n", payloadLength);
             record.getPayload(payloadBuffer);
             Serial.println("NFC: payload read completed");
-            // TODO: check if we have a memory leak or lost memory here
+            // TODO check if this works
+            //delete this->currentTagData;
             this->currentTagData = "";
             for (int i=0; i<payloadLength; i++) {
               this->currentTagData += char(payloadBuffer[i]);
             }
+            // TODO check if the delete works here
+            delete payloadBuffer;
             Serial.printf("NFC: payload data: '%s'\n", this->currentTagData.c_str());
             this->nfc_tag_present = true;
           } else {
@@ -85,9 +90,7 @@ void NFCReaderPN532::loop() {
   } else {
     Serial.println("NFC: no tag present");
     this->nfc_tag_present = false;
-    for (int i=0; i<4; i++) {
-      this->currentTagId[i] = 0;
-    }
+    this->currentTagId = "";
   }
 }
 
@@ -104,7 +107,7 @@ String NFCReaderPN532::getCurrentTagData() {
 }
 
 NFCPayload* NFCReaderPN532::getPayload() {
-  // TODO handle errors, check if there is a memory leak here
+  // TODO handle errors
   NFCPayload* payloadStruct = new NFCPayload();
   int length = this->currentTagData.length()+1;
   char* buffer = new char[length];
@@ -130,6 +133,7 @@ NFCPayload* NFCReaderPN532::getPayload() {
   token = strtok(NULL, "%"); 
   if (token != NULL)
     payloadStruct->url = token;
+  delete buffer;
   return payloadStruct;
 };
 

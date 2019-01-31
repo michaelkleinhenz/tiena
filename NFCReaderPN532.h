@@ -46,6 +46,7 @@ class NFCReaderPN532 {
     void init();
     void loop();
     boolean tagPresent();
+    // TODO do not use String
     String getCurrentTagId();
     String getCurrentTagData();
     NFCPayload* getPayload();
