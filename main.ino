@@ -15,10 +15,14 @@
 
 #include <pthread.h>
 #include <WiFi.h>
+#include <FS.h>
+#include <SD_MMC.h>
+#include <HTTPClient.h>
 
 #include "DisplaySSD1306.h"
 //#include "MP3PlayerI2S.h"
 #include "NFCReaderPN532.h"
+#include "Downloader.h"
 
 #define BUTTON_A_PIN 15
 #define BUTTON_B_PIN 2
@@ -30,30 +34,23 @@ int buttonCState = 0;
 
 //MP3PlayerI2S *mp3Player;
 NFCReaderPN532 *nfcReader;
+Downloader *downloader;
 
 String lastSeenTagID;
 boolean lastTagPresentState = false;
 
-void downloadBook() {
-  File f = SD_MMC.open("/downloads/test.pdf", FILE_WRITE);
-  if (f) {
-    http.begin("https://www.dropbox.com/s/0nt98kwsnokmqzd/2003Jangatesmoviemaker.pdf?dl=1");
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-        if (httpCode == HTTP_CODE_OK) {
-            WiFiClient* stream = http.getStreamPtr();
-            while (stream->available()) {
-                char c = stream->read();
-                f.print(c);
-            }
-        }
-    }
-    else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
-    f.close();
-    http.end();
+void setupWifi() {
+  //WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_OFF);
+  char* ssid = "Quendor";
+  char* password = "linuxtag";
+  Serial.printf("WIFI: connecting to %s\n", ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println("WIFI: still trying to connect");
   }
+  Serial.printf("WIFI: connection successful, IP address: %s\n", WiFi.localIP().toString().c_str());
 }
 
 /*
@@ -144,10 +141,12 @@ void startThreads() {
     Serial.println("SYS: An error has occurred on starting sound loop");
   }
   */
+ /*
   returnValue = pthread_create(&threads[1], NULL, startLoopNFC, (void*)nfcReader);
   if (returnValue) {
     Serial.println("SYS: an error has occurred when starting NFC loop");
   }
+  */
   /*
   returnValue = pthread_create(&threads[2], NULL, startLoopButtons, (void*)-1);
   if (returnValue) {
@@ -157,26 +156,33 @@ void startThreads() {
 }
 
 void setup() {
-  WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   Serial.println("Tiena RFID-based Audiobook Player");
   if(!SD_MMC.begin()) {
-    Serial.println("MP3: Card Reader Init Failed");
+    Serial.println("SYS: Card Reader Init Failed");
     return;
   }
   uint8_t cardType = SD_MMC.cardType();
-  if  (cardType == CARD_NONE) {
-    Serial.println("MP3: No SD_MMC Card found");
+  if (cardType == CARD_NONE) {
+    Serial.println("SYS: No SD_MMC Card found");
     return;
   }
   //mp3Player = new MP3PlayerI2S();
   nfcReader = new NFCReaderPN532();
+  downloader = new Downloader();
   //mp3Player->init();
   nfcReader->init();
   //pinMode(BUTTON_A_PIN, INPUT);
   //pinMode(BUTTON_B_PIN, INPUT);
   //pinMode(BUTTON_C_PIN, INPUT);
   startThreads();
+  setupWifi();
+  downloader->formatCard();
+  downloader->checkOrDownloadBook("/01.json", "https://s3-eu-west-1.amazonaws.com/tiena-files/01.json");
+  Book* book = downloader->getBookDescriptorForId("01");
+  for (int i=0; i<book->tracks.size(); i++) {
+    Serial.printf("SYS: track %d - '%s' in path '%s'\n", book->tracks[i]->number, book->tracks[i]->title, book->tracks[i]->filepath);
+  }
   Serial.println("SYS: boot complete");
 }
 

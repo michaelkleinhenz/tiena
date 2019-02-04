@@ -30,15 +30,18 @@ uint32_t AudioFileSourceMMC::read(void *data, uint32_t len) {
 }
 
 bool AudioFileSourceMMC::seek(int32_t pos, int dir) {
-  if (!audiofile) 
+  if (!audiofile) {
     return false;
-  if (dir==SEEK_SET) 
-   return audiofile.seek(pos);
-  else if (dir==SEEK_CUR) 
-   return audiofile.seek(audiofile.position() + pos);
-  else if (dir==SEEK_END) 
-   return audiofile.seek(audiofile.size() + pos);
-  return false;
+  }
+  if (dir==SEEK_SET) {
+    return audiofile.seek(pos);
+  } else if (dir==SEEK_CUR) {
+    return audiofile.seek(audiofile.position() + pos);
+  } else if (dir==SEEK_END) {
+    return audiofile.seek(audiofile.size() + pos);
+  } else {
+    return false;
+  }
 }
 
 bool AudioFileSourceMMC::close() {

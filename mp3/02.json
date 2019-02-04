@@ -1,0 +1,17 @@
+{
+  "id": "02",
+  "title": "The Title of Book 02",
+  "coverimage": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/cover.png",
+  "tracks": [
+    { "number": 1, "title": "Track Title 02-001", "filename": "001.mp3", "bytes": 40235, "md5sum": "24a9f705d136c75dda32ae164493f646", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/001.mp3" },
+    { "number": 2, "title": "Track Title 02-002", "filename": "002.mp3", "bytes": 42843, "md5sum": "cbdc2a6b322a047b79c81b0f5f509d1e", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/002.mp3" },
+    { "number": 3, "title": "Track Title 02-003", "filename": "003.mp3", "bytes": 43053, "md5sum": "c8fc9ee2d89676a542b7c6ad219abb3a", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/003.mp3" },
+    { "number": 4, "title": "Track Title 02-004", "filename": "004.mp3", "bytes": 31830, "md5sum": "2731610a725389d356a05efba8082a06", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/004.mp3" },
+    { "number": 5, "title": "Track Title 02-005", "filename": "005.mp3", "bytes": 36844, "md5sum": "2399208ce8f87f7141f042150a077889", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/005.mp3" },
+    { "number": 6, "title": "Track Title 02-006", "filename": "006.mp3", "bytes": 34025, "md5sum": "5b82e3f673f1eef22ca6e4a33ed04d5c", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/006.mp3" },
+    { "number": 7, "title": "Track Title 02-007", "filename": "007.mp3", "bytes": 29433, "md5sum": "388a767d23b5062bfad2fcc9482d8e13", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/007.mp3" },
+    { "number": 8, "title": "Track Title 02-008", "filename": "008.mp3", "bytes": 34184, "md5sum": "1d63b8f67b88fc8474483b3d734cd1f7", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/008.mp3" },
+    { "number": 9, "title": "Track Title 02-009", "filename": "009.mp3", "bytes": 33713, "md5sum": "113cc059378473a284fc3bf693fdb2d4", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/009.mp3" },
+    { "number": 10, "title": "Track Title 02-010", "filename": "010.mp3", "bytes": 32043, "md5sum": "a3349d4b6ded59bba322317f042765cb", "url": "http://tiena-files.s3-website-eu-west-1.amazonaws.com/02/010.mp3" }
+  ]
+}
