@@ -3,6 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
+                "/home/kleinhenz/Arduino/libraries/Queue/src",
                 "/home/kleinhenz/.arduino15/packages/esp32/tools/**",
                 "/home/kleinhenz/.arduino15/packages/esp32/hardware/esp32/1.0.1/**",
                 "/home/kleinhenz/Arduino/hardware/espressif/esp32/cores/esp32",

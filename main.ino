@@ -20,7 +20,7 @@
 #include <HTTPClient.h>
 
 #include "DisplaySSD1306.h"
-//#include "MP3PlayerI2S.h"
+#include "MP3PlayerI2S.h"
 #include "NFCReaderPN532.h"
 #include "Downloader.h"
 
@@ -32,7 +32,7 @@ int buttonAState = 0;
 int buttonBState = 0;
 int buttonCState = 0;
 
-//MP3PlayerI2S *mp3Player;
+MP3PlayerI2S *mp3Player;
 NFCReaderPN532 *nfcReader;
 Downloader *downloader;
 
@@ -52,16 +52,6 @@ void setupWifi() {
   }
   Serial.printf("WIFI: connection successful, IP address: %s\n", WiFi.localIP().toString().c_str());
 }
-
-/*
-void *startLoopSound(void *mp3PlayerImpl) {
-  // when this terminates, the thread ends.
-  // this should run forever.
-  while (true) {
-    ((MP3PlayerI2S*)mp3PlayerImpl)->loop();
-  }
-}
-*/
 
 void *startLoopNFC(void *nfcReaderImpl) {
   // when this terminates, the thread ends.
@@ -135,18 +125,10 @@ void *loopButtons(void *param) {
 void startThreads() {
   pthread_t threads[3];
   int returnValue;
-  /*
-  returnValue = pthread_create(&threads[0], NULL, startLoopSound, (void*)mp3Player);
-  if (returnValue) {
-    Serial.println("SYS: An error has occurred on starting sound loop");
-  }
-  */
- /*
   returnValue = pthread_create(&threads[1], NULL, startLoopNFC, (void*)nfcReader);
   if (returnValue) {
     Serial.println("SYS: an error has occurred when starting NFC loop");
   }
-  */
   /*
   returnValue = pthread_create(&threads[2], NULL, startLoopButtons, (void*)-1);
   if (returnValue) {
@@ -167,25 +149,36 @@ void setup() {
     Serial.println("SYS: No SD_MMC Card found");
     return;
   }
-  //mp3Player = new MP3PlayerI2S();
+  Serial.println("SYS: init MP3 player..");
+  mp3Player = new MP3PlayerI2S();
+  Serial.println("SYS: init NFC reader..");
   nfcReader = new NFCReaderPN532();
+  Serial.println("SYS: init downloader reader..");
   downloader = new Downloader();
-  //mp3Player->init();
+  Serial.println("SYS: finishing init MP3 player..");
+  mp3Player->init();
+  Serial.println("SYS: finishing init NFC reader..");
   nfcReader->init();
   //pinMode(BUTTON_A_PIN, INPUT);
   //pinMode(BUTTON_B_PIN, INPUT);
   //pinMode(BUTTON_C_PIN, INPUT);
+  Serial.println("SYS: starting system threads..");
   startThreads();
-  setupWifi();
-  downloader->formatCard();
+  Serial.println("SYS: setting up WIFI..");
+  //setupWifi(); // Somehow this crashes with an infinite loop if the mp3.loop() is changed
+  Serial.println("SYS: launching demo..");
+  //downloader->formatCard();
   downloader->checkOrDownloadBook("/01.json", "https://s3-eu-west-1.amazonaws.com/tiena-files/01.json");
   Book* book = downloader->getBookDescriptorForId("01");
   for (int i=0; i<book->tracks.size(); i++) {
     Serial.printf("SYS: track %d - '%s' in path '%s'\n", book->tracks[i]->number, book->tracks[i]->title, book->tracks[i]->filepath);
   }
+  mp3Player->playBook(book);
   Serial.println("SYS: boot complete");
 }
 
 void loop() {
-  // NOP
+  // the mp3 player loop needs to be on the main thread because
+  // the limited stack crashed the system otherwise.
+  mp3Player->loop();
 }
