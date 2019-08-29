@@ -57,15 +57,17 @@ void *startLoopNFC(void *nfcReaderImpl) {
   // when this terminates, the thread ends.
   // this should run forever.
   while (true) {
-    Serial.println("NFC: running loop");
+    //Serial.println("NFC: running loop");
     ((NFCReaderPN532*)nfcReaderImpl)->loop();
-    Serial.print("NFC: loop completed - ");
+    //Serial.print("NFC: loop completed - ");
     boolean currentPresentState = ((NFCReaderPN532*)nfcReaderImpl)->tagPresent();
+    /*
     if (((NFCReaderPN532*)nfcReaderImpl)->tagPresent()) {
       Serial.println("tag present");
     } else {
       Serial.println("no valid tag present");
     }
+    */
     if (!currentPresentState && lastTagPresentState) {
       Serial.println("NFC: tag was removed");
       lastTagPresentState = currentPresentState;
@@ -78,7 +80,7 @@ void *startLoopNFC(void *nfcReaderImpl) {
       if (lastSeenTagID && lastSeenTagID.equals(currentTagId)) {
         // the IDs are equal
         Serial.println("NFC: prior tag detected");
-        // TODO check if we're plaing, if not, start. If yes, do nothing
+        // TODO check if we're playing, if not, start. If yes, do nothing
       } else {
         Serial.println("NFC: new tag detected");
         NFCPayload* payload = ((NFCReaderPN532*)nfcReaderImpl)->getPayload();
@@ -179,6 +181,6 @@ void setup() {
 
 void loop() {
   // the mp3 player loop needs to be on the main thread because
-  // the limited stack crashed the system otherwise.
+  // the limited stack crashes the system otherwise.
   mp3Player->loop();
 }
